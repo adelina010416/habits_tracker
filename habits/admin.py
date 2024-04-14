@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+from habits.models import PlanHabit, Habit
+
+admin.site.register(Habit)
+admin.site.register(PlanHabit)

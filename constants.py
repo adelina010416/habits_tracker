@@ -1,1 +1,1 @@
-nullable = {}
+nullable = {'null': True, 'blank': True}
