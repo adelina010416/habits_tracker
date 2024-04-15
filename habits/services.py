@@ -1,10 +1,13 @@
 import json
 import time
+from datetime import datetime
 
+import pytz
 import requests
 from rest_framework import serializers
 
 from config import settings
+from config.settings import TIME_ZONE
 from habits.models import Habit, PlanHabit
 from users.models import User
 
@@ -112,4 +115,5 @@ def send_notification():
         message = f'Время для того, чтобы "{habit.today_habit.action}" в ' \
                   f'"{habit.today_habit.place}".\n' \
                   f'А после сможете {key_word} {award}'
+        habit.last_execution = datetime.now(pytz.timezone(TIME_ZONE))
         send_message(habit.today_habit.user.telegram_user_id, message)

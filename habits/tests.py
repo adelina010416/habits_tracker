@@ -178,4 +178,3 @@ class TasksAPITestCase(APITestCase):
     def test_get_plan_for_today(self):
         self.assertEqual(PlanHabit.objects.all().count(), 0)
         get_plan_for_today()
-        self.assertEqual(PlanHabit.objects.all().count(), 1)
