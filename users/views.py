@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytz
-from rest_framework import viewsets
+from rest_framework import viewsets, serializers
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -26,14 +26,20 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        user.set_password(serializer.data['password'])
+        user.set_password(self.request.data['password'])
         user.save()
 
 
 class UserAuth(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
-        user = User.objects.filter(email=request.data.get('email')).first()
-        user.last_login = datetime.now(pytz.timezone(TIME_ZONE))
-        user.save()
-        return super().post(request, *args, **kwargs)
+        user = User.objects.filter(email=request.data.get('email'))
+        if user.exists():
+            user.first().last_login = datetime.now(pytz.timezone(TIME_ZONE))
+            user.first().save()
+            return super().post(request, *args, **kwargs)
+        else:
+            raise serializers.ValidationError(
+                'Пользователь не найден. Пожалуйста, '
+                'проверьте правильность указанной почты '
+                'или зарегистрируйтесь.')
