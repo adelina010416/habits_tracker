@@ -1,0 +1,67 @@
+version: '2.4'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=${DATABASES_PASSWORD}
+      - POSTGRES_USER=postgres
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - '6379:6379'
+
+  app:
+    build: .
+    restart: always
+    tty: true
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - '8001:8000'
+    volumes:
+      - .:/code
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  celery:
+    build: .
+    restart: always
+    tty: true
+    command: celery -A config worker -l INFO
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - app
+
+  celery_beat:
+    build: .
+    restart: always
+    tty: true
+    command: celery -A config beat -S django
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - app
+
+volumes:
+  pg_data:
